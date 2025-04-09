@@ -29,12 +29,22 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "common.h"
 
+#include "modbus_slave.h"
+#include "configuration.h"
+#include "mb_upgrade.h"
+#include "system_msp.h"
+#include "adc.h"
+#include "switch.h"
+#include "control.h"
+#include "flash_app.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
+#define PERIOD_HANDLE_LOW_PRIO      100
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -70,7 +80,13 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  uint32_t tick = 0;
 
+  /* Remap reset vector and enable interrupts */
+  RCC->CFGR = 0x00000000U;  // workaround - disable PLL otherwise clock config returns error
+  System_RemapVector();
+  __enable_irq();
+  SET_BIT(DBGMCU->APB1FZR1, DBGMCU_APB1FZR1_DBG_IWDG_STOP);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -102,12 +118,37 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
 
+  /* Initialize all configured peripherals */
+  Config_Init();
+  FlashApp_Init();
+  MbSlave_Init();
+  Control_Init();
+
+  /* Set initial function */
+  System_ReloadWdg();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* High priority handles */
+    MbSlave_Handle();
+    CDC_PacketReceived();
+
+    /* Low priority - slow handles */
+    if (TICK_EXPIRED(tick))
+    {
+      tick = HAL_GetTick() + PERIOD_HANDLE_LOW_PRIO;
+      conf.sys.io_input = Switch_GetAll();
+
+      Control_Handle();
+      MbSlave_UpdateSlaveAddress();
+      FlashApp_Handle();
+      System_ReloadWdg();
+    }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -167,6 +208,91 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  /* UART receive complete Callbacks */
+  MbSlave_RxCpltCallback(huart);
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  /* UART transmit complete Callbacks */
+  MbSlave_TxCpltCallback(huart);
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+  /* UART error Callbacks */
+  MbSlave_ErrorCallback(huart);
+}
+
+#define FW_UPGR_MASK            0xFFFF
+#define FW_UPGR_VALUE_FIRM      CONF_TARGET_DEVICE
+
+Status_t MbUpgr_HeaderClb(uint16_t type, uint16_t mode, uint32_t size)
+{
+  Status_t ret = STATUS_OK;
+
+  if ((type & FW_UPGR_MASK) == FW_UPGR_VALUE_FIRM)
+  {
+    switch (mode)
+    {
+      case MB_UPGR_MODE_ERASE_AT_START:
+        ret = System_FlashErase((uint32_t)CONF_C_APP_BUFFER_OFFSET, (uint32_t)CONF_C_APP_BUFFER_OFFSET + size);
+        break;
+      case MB_UPGR_MODE_APPLY:
+        System_Delay(1000);
+        System_Reset();
+        break;
+      default:
+        break;
+    }
+  }
+  else
+  {
+    ret = STATUS_ERROR;
+  }
+
+  return ret;
+}
+
+Status_t MbUpgr_WritePageClb(uint32_t offset, uint8_t *data, uint16_t length)
+{
+  Status_t ret = STATUS_OK;
+
+  /* Write new data into flash */
+  ret = System_FlashProgram((uint32_t)CONF_C_APP_BUFFER_OFFSET + offset, data, length);
+
+  return ret;
+}
+
+
+Status_t MbUpgr_WriteDoneClb(uint32_t length)
+{
+  Status_t ret = STATUS_OK;
+
+  if ((MbUpgr_GetType() & FW_UPGR_MASK) == FW_UPGR_VALUE_FIRM)
+  {
+    /* The very last packet, verify image */
+    ret = System_VerifyImage((uint32_t*) CONF_C_APP_BUFFER_OFFSET, 0);
+
+    /* In case of error, erase application buffer */
+    if (ret)
+    {
+      System_FlashErase((uint32_t)CONF_C_APP_BUFFER_OFFSET, (uint32_t)CONF_C_APP_BUFFER_OFFSET + length);
+    }
+  }
+  else
+  {
+    ret = STATUS_ERROR;
+  }
+
+  return ret;
+}
+
+
 
 /* USER CODE END 4 */
 

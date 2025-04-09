@@ -17,7 +17,7 @@
 /**
  * Target device ID
  */
-#define CONF_TARGET_DEVICE            8103   //< Set proper target device ID
+#define CONF_TARGET_DEVICE            4272   //< Set proper target device ID
 
 /* Private macros  -----------------------------------------------------------*/
 /* Private typedefs ----------------------------------------------------------*/
@@ -37,8 +37,8 @@ const uint32_t CONF_FIRMWARE_INFO[8] = {
 const uint32_t __attribute__((section (".sectionFwInfo"))) CONF_FACTORY_INFO[8] = {
     0xffffffff,     // Default serial number
     CONF_TARGET_DEVICE,   // Default device ID
-    10001,   // Default Hardware revision
-    10001,   // Default Bootloader revision
+    1001,   // Default Hardware revision
+    1002,   // Default Bootloader revision
     CONF_TARGET_DEVICE,   // Default SN prefix
     0xFFFFFFFF,
     0xFFFFFFFF, 0xFFFFFFFF,  //

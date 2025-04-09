@@ -82,7 +82,7 @@ SECTIONS
   {
     . = ALIGN(4);
     KEEP(*(.isr_vector)) /* Startup code */
-    KEEP(*(.sectionIsrConst))
+    /* KEEP(*(.sectionIsrConst)) */
     . = ALIGN(_LD_FW_INFO_OFFSET);
     KEEP(*(.sectionFwInfo)) /* Factory information goes here */
     . = ALIGN(4);

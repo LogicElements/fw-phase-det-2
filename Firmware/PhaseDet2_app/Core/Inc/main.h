@@ -84,6 +84,8 @@ void Error_Handler(void);
 #define CS_A_GPIO_Port GPIOB
 #define CS_B_Pin GPIO_PIN_5
 #define CS_B_GPIO_Port GPIOB
+#define LED_0_Pin GPIO_PIN_9
+#define LED_0_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

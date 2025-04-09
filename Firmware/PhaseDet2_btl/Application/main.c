@@ -64,7 +64,7 @@ int main(void)
   System_ReloadWdg();
 
   // start the application anyway
-//  Btl_StartAppAnyway();
+  Btl_StartAppAnyway();
 
   // infinite loop
   while (1)

@@ -7,7 +7,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -30,7 +30,7 @@
 #include "usbd_cdc.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "common.h"
 /* USER CODE END INCLUDE */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -48,8 +48,8 @@
   * @{
   */
 /* Define size for the receive and transmit buffer over CDC */
-#define APP_RX_DATA_SIZE  64
-#define APP_TX_DATA_SIZE  64
+#define APP_RX_DATA_SIZE  4
+#define APP_TX_DATA_SIZE  4
 /* USER CODE BEGIN EXPORTED_DEFINES */
 
 /* USER CODE END EXPORTED_DEFINES */
@@ -109,6 +109,24 @@ uint8_t CDC_Transmit_FS(uint8_t* Buf, uint16_t Len);
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
 
+/**
+ * Is USB ready to transmit
+ * @return STATUS_OK if ready, ERROR not ready
+ */
+Status_t CDC_TransmitReady(void);
+
+/**
+ * Process a received packet data, pass it to protocol handlers and send response
+ *
+ * @return Status
+ */
+Status_t CDC_PacketReceived(void);
+
+/**
+ * Clear Receive buffers
+ * @return STATUS_OK
+ */
+Status_t CDC_ClearRxBuffer(void);
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**
