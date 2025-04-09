@@ -54,6 +54,9 @@
 #define MODBUS_TIM_IRQ_NUMBER               TIM1_UP_TIM16_IRQn
 #define MODBUS_TIM_IRQ_HANDLER              TIM1_UP_TIM16_IRQHandler
 
+
+#define MODBUS_BASE_ADDRESS       96
+
 /* Typedefs-------------------------------------------------------------------*/
 /* Functions -----------------------------------------------------------------*/
 

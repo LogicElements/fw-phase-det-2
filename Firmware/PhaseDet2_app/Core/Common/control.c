@@ -11,6 +11,7 @@
 #include "configuration.h"
 #include "system_msp.h"
 #include "flash_app.h"
+#include "modbus_slave.h"
 
 /* Private defines -----------------------------------------------------------*/
 
@@ -122,6 +123,7 @@ Status_t Control_Handle(void)
   else
   {
     CLEAR_BIT(conf.sys.status, STAT_BIT_TESTING);
+    conf.com.mb_address = (conf.sys.io_input & 0xF) + MODBUS_BASE_ADDRESS;
   }
 
   /* Error flag of status register */
@@ -140,11 +142,11 @@ Status_t Control_Handle(void)
     cntrl.prevTick += 1000;
     conf.sys.uptime += 1;
 
-    HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, GPIO_PIN_RESET);
   }
   else
   {
-    HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(LED_0_GPIO_Port, LED_0_Pin, GPIO_PIN_SET);
   }
 
   /* Store previous command */
