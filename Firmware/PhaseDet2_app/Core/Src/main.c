@@ -40,11 +40,13 @@
 #include "control.h"
 #include "flash_app.h"
 #include "usbd_cdc_if.h"
+#include "amc131m02.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define PERIOD_HANDLE_LOW_PRIO      100
+#define PERIOD_HANDLE_LOW_PRIO      500
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -81,6 +83,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   uint32_t tick = 0;
+  volatile uint16_t reg = 0;
 
   /* Remap reset vector and enable interrupts */
   RCC->CFGR = 0x00000000U;  // workaround - disable PLL otherwise clock config returns error
@@ -116,6 +119,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_CRC_Init();
   MX_USB_DEVICE_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
   /* Initialize all configured peripherals */
@@ -123,6 +127,7 @@ int main(void)
   FlashApp_Init();
   MbSlave_Init();
   Control_Init();
+  Amc_Init();
 
   /* Set initial function */
   System_ReloadWdg();
@@ -147,6 +152,8 @@ int main(void)
       MbSlave_UpdateSlaveAddress();
       FlashApp_Handle();
       System_ReloadWdg();
+
+      reg = Amc_ReadRegister(AMC_REG_ID);
     }
 
     /* USER CODE END WHILE */
